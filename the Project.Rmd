@@ -1,0 +1,1159 @@
+---
+title: "Descriptive Statistics"
+output: html_document
+---
+
+```{r, echo=FALSE}
+loadPath = "C:\\Users\\Sarah\\Google Drive\\PROJECT\\"
+
+```
+
+```{r,echo=FALSE}
+e.df = read.csv(file=paste(loadPath, "msci eafe.csv", sep=""), 
+                    header=TRUE, stringsAsFactors=FALSE)
+M.df = read.csv(file=paste(loadPath, "WILL5000INDFC.csv", sep=""), 
+                                 header=TRUE, stringsAsFactors=FALSE)
+SG.df = read.csv(file=paste(loadPath, "small cap growth 2000.csv", sep=""), 
+                    header=TRUE, stringsAsFactors=FALSE)
+SV.df = read.csv(file=paste(loadPath, "small cap value 2000.csv", sep=""), 
+                    header=TRUE, stringsAsFactors=FALSE)
+LG.df = read.csv(file=paste(loadPath, "russell 1000 growth from march 2000.csv", sep=""), 
+                    header=TRUE, stringsAsFactors=FALSE)
+LV.df = read.csv(file=paste(loadPath, "russell 1000 value from march 2000.csv", sep=""), 
+                    header=TRUE, stringsAsFactors=FALSE)
+```
+
+```{r,echo=FALSE}
+lg.df<-na.omit(LG.df)
+lv.df<-na.omit(LV.df)
+sv.df<-na.omit(SV.df)
+sg.df<-na.omit(SG.df)
+m.df<-na.omit(M.df)
+```
+```{r,echo=FALSE}
+rownames(lg.df) = lg.df$Date
+rownames(lv.df) = lv.df$Date
+rownames(sv.df) = sv.df$Date
+rownames(sg.df) = sg.df$Date
+rownames(m.df) = m.df$DATE
+rownames(e.df) = e.df$Date
+```
+
+```{r, echo=FALSE}
+m.df = m.df[, "Adj.Close", drop=FALSE]
+e.df = e.df[, "Adj.Close", drop=FALSE]
+sg.df = sg.df[, "Adj.Close", drop=FALSE]
+sv.df = sv.df[, "Adj.Close", drop=FALSE]
+lv.df = lv.df[, "Adj.Close", drop=FALSE]
+lg.df = lg.df[, "Adj.Close", drop=FALSE]
+
+```
+``` {r, echo=FALSE}
+
+library(PerformanceAnalytics)
+library(timeSeries)
+
+```
+
+```{r,echo=FALSE}
+dates.e = as.yearmon(rownames(e.df), format="%m/%d/%Y")
+dates.sg = as.yearmon(rownames(sg.df), format="%m/%d/%Y")
+dates.sv = as.yearmon(rownames(sv.df), format="%m/%d/%Y")
+dates.lg = as.yearmon(rownames(lg.df), format="%m/%d/%Y")
+dates.lv = as.yearmon(rownames(lv.df), format="%m/%d/%Y")
+dates.m = as.yearmon(rownames(m.df), format="%m/%d/%Y")
+```
+```{r,echo=FALSE}
+sg.z = zoo(x=sg.df$Adj.Close, order.by=dates.sg)
+sv.z = zoo(x=sv.df$Adj.Close, order.by=dates.sv)
+lg.z = zoo(x=lg.df$Adj.Close, order.by=dates.lg)
+lv.z = zoo(x=lv.df$Adj.Close, order.by=dates.lv)
+m.z = zoo(x=m.df$Adj.Close, order.by=dates.m)
+e.z = zoo(x=e.df$Adj.Close, order.by=dates.e)
+```
+##**Calculating Compound Return**
+
+```{r,echo=FALSE}
+
+ec.z = (CalculateReturns(e.z, method="compound"))[-1]
+sgc.z =CalculateReturns(sg.z, method="simple")[-1]
+mc.z = CalculateReturns(m.z, method="compound")[-1]
+svc.z = CalculateReturns(sv.z, method="compound")[-1]
+lvc.z = CalculateReturns(lv.z, method="compound")[-1]
+lgc.z = CalculateReturns(lg.z, method="compound")[-1]
+```
+
+```{r,echo=FALSE}
+ac.z=merge(sgc.z,ec.z,svc.z,lvc.z,lgc.z,mc.z)
+rbind((ac.z),c("small growth", "Euro Equity","small value","large value","large growth","US Equity")
+ab.z=merge(ec.z,mc.z)
+names(ab.z)=c("Euro Equity","US Equity")
+chart.TimeSeries(ab.z,lwd=2, main="Returns on US vs European Market",legend.loc="bottomright")
+chart.CumReturns(ac.z, lwd=2, main="Growth of $1", legend.loc="topleft")
+e.m<-as.matrix(ec.z)
+rownames(e.m)<-rownames(e.df)[-1]
+sv.m<-as.matrix(svc.z)
+rownames(sv.m)<-rownames(sv.df)[-1]
+sg.m<-as.matrix(sgc.z)
+rownames(sg.m)<-rownames(sg.df)[-1]
+lv.m<-as.matrix(lvc.z)
+rownames(lv.m)<-rownames(lv.df)[-1]
+lg.m<-as.matrix(lgc.z)
+rownames(lg.m)<-rownames(lg.df)[-1]
+m.m<-m.m<-as.matrix(mc.z)
+rownames(m.m)<-rownames(m.df)[-1]
+a.m<-as.matrix(ac.z)[,-1]
+rownames(a.m)<-rownames(m.df)[-1]
+
+```
+##**Examining the Frequency Distribution**
+
+```{r,echo=FALSE}
+
+chart.Histogram((sv.m),methods=c("add.density","add.risk","add.rug","add.qqplot","add.centered"))
+chart.Histogram((lg.m),methods=c("add.density","add.risk","add.rug","add.qqplot","add.centered"))
+```
+###**Charting Asset Classes with same Histogram Breaks to Facilitate Comparison**
+```{r,echo=FALSE}
+m.hist = hist(m.m,plot=F,breaks=10)
+class(m.hist)
+names(m.hist)      
+
+hist(m.m,main="US", col="slateblue1", xlab="returns", breaks=m.hist$breaks)
+hist(e.m,main="Europe", col="slateblue1", xlab="returns",breaks=m.hist$breaks)
+hist(lg.m,main="US", col="slateblue1", xlab="returns", breaks=m.hist$breaks)
+hist(lv.m,main="Europe", col="slateblue1", xlab="returns",breaks=m.hist$breaks)
+
+```
+
+###Various Statistics for Each Market 
+US Equity 
+```{r}
+hist(m.m,main="US Equity", col="slateblue1",
+     probability=T, ylim=c(0,18))
+market.density = density(m.m[-1])
+points(market.density,type="l", col="orange", lwd=2)
+median(m.m)
+quantile(m.m,probs=0.75) - quantile(m.m,probs=0.25)
+mean(m.m)
+var(m.m)
+sd(m.m)
+skewness(m.m)
+kurtosis(m.m)
+min(m.m)
+max(m.m)
+```
+Europe Equity
+```{r}
+hist(e.m,main="Europe Equity", col="slateblue1",
+     probability=T, ylim=c(0,18))
+market.density = density(e.m[-1])
+points(market.density,type="l", col="orange", lwd=2)
+median(e.m)
+quantile(e.m,probs=0.75) - quantile(e.m,probs=0.25)
+mean(e.m)
+var(e.m)
+sd(e.m)
+skewness(e.m)
+kurtosis(e.m)
+min(e.m)
+max(e.m)
+```
+
+
+## **Box Plots and Scatter Plots**
+
+```{r,echo=FALSE}
+boxplot.matrix(a.m,names=c("Euro","SV","LV","LG","US"),outchar=T, col="slateblue1",
+               main="Comparison of return distributions",ylab="monthly return")
+boxplot(sg.m)
+
+plot(m.m,e.m,main="Monthly cc returns on Dev and Em", col="slateblue1")
+abline(h=mean(e.m))  # horizontal line at SP500 mean
+abline(v=mean(m.m))    # vertical line at MSFT mean
+
+pairs(a.m, col="slateblue1") 
+```
+
+*most relationships are between both types of value stocks, and between large stocksThe MSCI has poor correlation with all.* 
+
+
+## **Comparing the Market Return with that of an IDD Gaussian Distribution with the same Mean and SD as US Equity**
+
+```{r}
+
+set.seed(123)
+gwn = rnorm(length(m.m),mean=mean(m.m),sd=sd(m.m))
+```
+```{r,echo=FALSE}
+par(mfrow=c(2,1))
+ts.plot(m.m,main="US Equity", lwd=2, col="blue")
+abline(h=0)
+ts.plot(gwn,main="Gaussian data with same mean and sd as US Equity", lwd=2, col="blue")
+abline(h=0)
+par(mfrow=c(1,1))
+
+z1 = scale(gwn)          # standardize to have mean zero and sd 1
+n1 = length(gwn)
+F.hat = 1:n1/n1        	# empirical cdf
+x1 = sort(z1)				# sort from smallest to largest
+y1 = pnorm(x1)			# compute standard normal cdf at x
+
+plot(x1,y1,main="Empirical CDF vs. Normal CDF for Gaussian data",
+     type="l",lwd=2,xlab="standardized gwn",ylab="CDF")
+points(x1,F.hat, type="s", lty=1, lwd=3, col="orange")
+
+legend(x="topleft",legend=c("Normal CDF","Empirical CDF"),
+       lty=c(1,1), lwd=2, col=c("black","orange"))
+
+```
+
+
+
+```{r,echo=FALSE}
+
+quantile(m.m,probs=c(0.01,0.05),na.rm=T)
+
+qnorm(p=c(0.01,0.05), mean=mean(m.m), sd=sd(m.m))
+
+qqnorm(gwn, main="Gaussian data")
+qqline(gwn)
+qqnorm(m.m, main="US")
+qqline(m.m)
+qqnorm(e.m, main="Europe")
+qqline(e.m)
+qqnorm(sv.m, main="Large Growth")
+qqline(sv.m)
+qqnorm(lg.m, main="Large Growth")
+qqline(lg.m)
+qqnorm(lv.m, main="Large Growth")
+qqline(lv.m)
+```
+#Constant Expected Return Model Calibrated to monthly market return
+
+```{r}
+mu = mean(m.m)
+sd.e = sd(m.m)
+nobs = 170
+set.seed(114)
+sim.e = rnorm(nobs, mean=0, sd=sd.e)
+sim.ret = mu + sim.e
+boxplot(cbind(m.m,sim.ret,gwn), names=c("World","CER","GWN"))
+```
+
+### **Comparing Market Return with the Random Walk Model, controlling for SD of errors and Mean of return** UNDERSTAND AND FIX 
+
+```{r}
+mu = mean(m.m)
+sd.e = sd(m.m)
+nobs = 170
+set.seed(132)
+sim.e = rnorm(nobs, mean=0, sd=sd.e)
+sim.p = 1 + mu*seq(nobs) + cumsum(sim.e)
+sim.P = exp(sim.p)
+par(mfrow=c(2,1),mar=rep(2,4))
+ts.plot(sim.p, col="blue",lwd=2,
+        ylim=c(-2, 4), ylab="log price")
+lines( (1+mu*seq(nobs)), lty="dotted", col="black", lwd=2)
+lines(cumsum(sim.e), col="orange", lty="dashed", lwd=2)
+abline(h=0)
+legend(x="topleft",legend=c("p(t)","E[p(t)]","p(t)-E[p(t)]"),
+       lty=c("solid","dotted","dashed"), col=c("blue","black","orange"), 
+       lwd=2, cex=c(0.75,0.75,0.75))
+ts.plot(sim.P, lwd=2, col="blue", ylab="price")
+
+boxplot(cbind(sim.e,m.m), lwd=2, col=c("green","yellow"), names=c("random walk","market"),ylab="price")
+
+```
+
+### Computing means, variances and covariances 
+```{r}
+muhat.vals = colMeans(a.m)
+muhat.vals
+sigma2hat.vals = colVars(a.m)
+sigma2hat.vals
+sigmahat.vals = colSds(a.m)
+sigmahat.vals
+cov.mat = cov(a.m)
+cov.mat
+cor.mat = cor(a.m)
+cor.mat
+covhat.vals = cov.mat[lower.tri(cov.mat)]
+rhohat.vals = cor.mat[lower.tri(cor.mat)]
+names(covhat.vals) <- names(rhohat.vals) <- c("sve","lve","lge","me","lvsv","lgsv","msv","lvlg","lvm","lgm")
+```
+### compute estimated standard error for mean
+```{r}
+
+nobs = nrow(a.m)
+nobs
+se.muhat = sigmahat.vals/sqrt(nobs)
+se.muhat # in some cases the se of the mean is even bigger than the mean itself! (in LG)
+
+# compute t-ratios
+muhat.vals/se.muhat
+# compute exact 95% confidence intervals
+t.975 = qt(0.975, df=99)
+mu.lower = muhat.vals - t.975*se.muhat
+mu.upper = muhat.vals + t.975*se.muhat
+mu.width = mu.upper - mu.lower
+cbind(mu.lower,mu.upper,mu.width)
+```
+
+### compute estimated standard error for Variance and Standard Deviation
+
+```{r}
+se.sigma2hat = sigma2hat.vals/sqrt(nobs/2)
+se.sigmahat = sigmahat.vals/sqrt(2*nobs)
+se.sigma2hat
+se.sigmahat
+# compute approx 95% confidence intervals
+sigma2.lower = sigma2hat.vals - 2*se.sigma2hat
+sigma2.upper = sigma2hat.vals + 2*se.sigma2hat
+sigma2.width = sigma2.upper - sigma2.lower
+cbind(sigma2.lower,sigma2.upper,sigma2.width)
+
+sigma.lower = sigmahat.vals - 2*se.sigmahat
+sigma.upper = sigmahat.vals + 2*se.sigmahat
+sigma.width = sigma.upper - sigma.lower
+cbind(sigma.lower,sigma.upper,sigma.width)
+```
+
+###compute estimated standard error for Correlation
+
+```{r}
+se.rhohat = (1-rhohat.vals^2)/sqrt(nobs)
+se.rhohat
+
+# compute approx 95% confidence intervals
+rho.lower = rhohat.vals - 2*se.rhohat
+rho.upper = rhohat.vals + 2*se.rhohat
+rho.width = rho.upper - rho.lower
+cbind(rho.lower,rho.upper,rho.width)
+
+```
+
+# show risk return tradeoffs
+```{r}
+cex.val = 2
+plot(sigmahat.vals, muhat.vals,  ylim=c(0, 0.04), xlim=c(0, 0.20), ylab=expression(mu[p]),
+     xlab=expression(sigma[p]), pch=16, col="blue", cex=2.5, cex.lab=1.75)     
+text(sigmahat.vals, muhat.vals, labels=names(muhat.vals), pos=4, cex = cex.val)
+```
+
+# optimization 
+
+```{r,echo=FALSE}
+
+# portfolio.r
+# 
+# Functions for portfolio analysis
+# to be used in Introduction to Computational Finance & Financial Econometrics
+# last updated: August 8, 2012 by Hezky Varon
+#               November 7, 2000 by Eric Zivot
+#               Oct 15, 2003 by Tim Hesterberg
+#               November 18, 2003 by Eric Zivot
+#               November 9, 2004 by Eric Zivot
+#    	            November 9, 2008 by Eric Zivot
+#               August 11, 2011 by Eric Zivot
+#
+# Functions:
+#	1. efficient.portfolio			compute minimum variance portfolio
+#							                subject to target return
+#	2. globalMin.portfolio			compute global minimum variance portfolio
+#	3. tangency.portfolio			  compute tangency portfolio
+#	4. efficient.frontier			  compute Markowitz bullet
+#	5. getPortfolio					    create portfolio object
+
+stopifnot("package:quadprog" %in% search()  ||  require("quadprog",quietly = TRUE) )
+
+getPortfolio <-
+function(er, cov.mat, weights)
+{
+	# contruct portfolio object
+	#
+	# inputs:
+	# er				   N x 1 vector of expected returns
+	# cov.mat  		 N x N covariance matrix of returns
+	# weights			 N x 1 vector of portfolio weights
+	#
+	# output is portfolio object with the following elements
+	# call				original function call
+	# er				  portfolio expected return
+	# sd				  portfolio standard deviation
+	# weights			N x 1 vector of portfolio weights
+	#
+	call <- match.call()
+	
+	#
+	# check for valid inputs
+	#
+	asset.names <- names(er)
+	weights <- as.vector(weights)
+	names(weights) = names(er)
+  er <- as.vector(er)					# assign names if none exist
+	if(length(er) != length(weights))
+		stop("dimensions of er and weights do not match")
+ 	cov.mat <- as.matrix(cov.mat)
+	if(length(er) != nrow(cov.mat))
+		stop("dimensions of er and cov.mat do not match")
+	if(any(diag(chol(cov.mat)) <= 0))
+		stop("Covariance matrix not positive definite")
+		
+	#
+	# create portfolio
+	#
+	er.port <- crossprod(er,weights)
+	sd.port <- sqrt(weights %*% cov.mat %*% weights)
+	ans <- list("call" = call,
+	      "er" = as.vector(er.port),
+	      "sd" = as.vector(sd.port),
+	      "weights" = weights) 
+	class(ans) <- "portfolio"
+	ans
+}
+
+efficient.portfolio <-
+function(er, cov.mat, target.return, shorts=TRUE)
+{
+  # compute minimum variance portfolio subject to target return
+  #
+  # inputs:
+  # er					    N x 1 vector of expected returns
+  # cov.mat  			  N x N covariance matrix of returns
+  # target.return	  scalar, target expected return
+  # shorts          logical, allow shorts is TRUE
+  #
+  # output is portfolio object with the following elements
+  # call				    original function call
+  # er					    portfolio expected return
+  # sd					    portfolio standard deviation
+  # weights			    N x 1 vector of portfolio weights
+  #
+  call <- match.call()
+
+  #
+  # check for valid inputs
+  #
+  asset.names <- names(er)
+  er <- as.vector(er)					# assign names if none exist
+  N <- length(er)
+  cov.mat <- as.matrix(cov.mat)
+  if(N != nrow(cov.mat))
+    stop("invalid inputs")
+  if(any(diag(chol(cov.mat)) <= 0))
+    stop("Covariance matrix not positive definite")
+  # remark: could use generalized inverse if cov.mat is positive semidefinite
+
+  #
+  # compute efficient portfolio
+  #
+  if(shorts==TRUE){
+    ones <- rep(1, N)
+    top <- cbind(2*cov.mat, er, ones)
+    bot <- cbind(rbind(er, ones), matrix(0,2,2))
+    A <- rbind(top, bot)
+    b.target <- as.matrix(c(rep(0, N), target.return, 1))
+    x <- solve(A, b.target)
+    w <- x[1:N]
+  } else if(shorts==FALSE){
+    Dmat <- 2*cov.mat
+    dvec <- rep.int(0, N)
+    Amat <- cbind(rep(1,N), er, diag(1,N))
+    bvec <- c(1, target.return, rep(0,N))
+    result <- solve.QP(Dmat=Dmat,dvec=dvec,Amat=Amat,bvec=bvec,meq=2)
+    w <- round(result$solution, 6)
+  } else {
+    stop("shorts needs to be logical. For no-shorts, shorts=FALSE.")
+  }
+
+  #
+  # compute portfolio expected returns and variance
+  #
+  names(w) <- asset.names
+  er.port <- crossprod(er,w)
+  sd.port <- sqrt(w %*% cov.mat %*% w)
+  ans <- list("call" = call,
+	      "er" = as.vector(er.port),
+	      "sd" = as.vector(sd.port),
+	      "weights" = w) 
+  class(ans) <- "portfolio"
+  ans
+}
+
+globalMin.portfolio <-
+function(er, cov.mat, shorts=TRUE)
+{
+  # Compute global minimum variance portfolio
+  #
+  # inputs:
+  # er				N x 1 vector of expected returns
+  # cov.mat		N x N return covariance matrix
+  # shorts          logical, allow shorts is TRUE
+  #
+  # output is portfolio object with the following elements
+  # call			original function call
+  # er				portfolio expected return
+  # sd				portfolio standard deviation
+  # weights		N x 1 vector of portfolio weights
+  call <- match.call()
+
+  #
+  # check for valid inputs
+  #
+  asset.names <- names(er)
+  er <- as.vector(er)					# assign names if none exist
+  cov.mat <- as.matrix(cov.mat)
+  N <- length(er)
+  if(N != nrow(cov.mat))
+    stop("invalid inputs")
+  if(any(diag(chol(cov.mat)) <= 0))
+    stop("Covariance matrix not positive definite")
+  # remark: could use generalized inverse if cov.mat is positive semi-definite
+
+  #
+  # compute global minimum portfolio
+  #
+  if(shorts==TRUE){
+    cov.mat.inv <- solve(cov.mat)
+    one.vec <- rep(1,N)
+    w.gmin <- rowSums(cov.mat.inv) / sum(cov.mat.inv)
+    w.gmin <- as.vector(w.gmin)
+  } else if(shorts==FALSE){
+    Dmat <- 2*cov.mat
+    dvec <- rep.int(0, N)
+    Amat <- cbind(rep(1,N), diag(1,N))
+    bvec <- c(1, rep(0,N))
+    result <- solve.QP(Dmat=Dmat,dvec=dvec,Amat=Amat,bvec=bvec,meq=1)
+    w.gmin <- round(result$solution, 6)
+  } else {
+    stop("shorts needs to be logical. For no-shorts, shorts=FALSE.")
+  }
+ 
+  names(w.gmin) <- asset.names
+  er.gmin <- crossprod(w.gmin,er)
+  sd.gmin <- sqrt(t(w.gmin) %*% cov.mat %*% w.gmin)
+  gmin.port <- list("call" = call,
+		    "er" = as.vector(er.gmin),
+		    "sd" = as.vector(sd.gmin),
+		    "weights" = w.gmin)
+  class(gmin.port) <- "portfolio"
+  gmin.port
+}
+
+
+tangency.portfolio <- 
+function(er,cov.mat,risk.free, shorts=TRUE)
+{
+  # compute tangency portfolio
+  #
+  # inputs:
+  # er				   N x 1 vector of expected returns
+  # cov.mat		   N x N return covariance matrix
+  # risk.free		 scalar, risk-free rate
+  # shorts          logical, allow shorts is TRUE
+  #
+  # output is portfolio object with the following elements
+  # call			  captures function call
+  # er				  portfolio expected return
+  # sd				  portfolio standard deviation
+  # weights		 N x 1 vector of portfolio weights
+  call <- match.call()
+
+  #
+  # check for valid inputs
+  #
+  asset.names <- names(er)
+  if(risk.free < 0)
+    stop("Risk-free rate must be positive")
+  er <- as.vector(er)
+  cov.mat <- as.matrix(cov.mat)
+  N <- length(er)
+  if(N != nrow(cov.mat))
+    stop("invalid inputs")
+  if(any(diag(chol(cov.mat)) <= 0))
+    stop("Covariance matrix not positive definite")
+  # remark: could use generalized inverse if cov.mat is positive semi-definite
+
+  #
+  # compute global minimum variance portfolio
+  #
+  gmin.port <- globalMin.portfolio(er, cov.mat, shorts=shorts)
+  if(gmin.port$er < risk.free)
+    stop("Risk-free rate greater than avg return on global minimum variance portfolio")
+
+  # 
+  # compute tangency portfolio
+  #
+  if(shorts==TRUE){
+    cov.mat.inv <- solve(cov.mat)
+    w.t <- cov.mat.inv %*% (er - risk.free) # tangency portfolio
+    w.t <- as.vector(w.t/sum(w.t))	# normalize weights
+  } else if(shorts==FALSE){
+    Dmat <- 2*cov.mat
+    dvec <- rep.int(0, N)
+    er.excess <- er - risk.free
+    Amat <- cbind(er.excess, diag(1,N))
+    bvec <- c(1, rep(0,N))
+    result <- solve.QP(Dmat=Dmat,dvec=dvec,Amat=Amat,bvec=bvec,meq=1)
+    w.t <- round(result$solution/sum(result$solution), 6)
+  } else {
+    stop("Shorts needs to be logical. For no-shorts, shorts=FALSE.")
+  }
+    
+  names(w.t) <- asset.names
+  er.t <- crossprod(w.t,er)
+  sd.t <- sqrt(t(w.t) %*% cov.mat %*% w.t)
+  tan.port <- list("call" = call,
+		   "er" = as.vector(er.t),
+		   "sd" = as.vector(sd.t),
+		   "weights" = w.t)
+  class(tan.port) <- "portfolio"
+  tan.port
+}
+
+efficient.frontier <- 
+function(er, cov.mat, nport=20, alpha.min=-0.5, alpha.max=1.5, shorts=TRUE)
+{
+  # Compute efficient frontier with no short-sales constraints
+  #
+  # inputs:
+  # er			  N x 1 vector of expected returns
+  # cov.mat	  N x N return covariance matrix
+  # nport		  scalar, number of efficient portfolios to compute
+  # shorts          logical, allow shorts is TRUE
+  #
+  # output is a Markowitz object with the following elements
+  # call		  captures function call
+  # er			  nport x 1 vector of expected returns on efficient porfolios
+  # sd			  nport x 1 vector of std deviations on efficient portfolios
+  # weights 	nport x N matrix of weights on efficient portfolios 
+  call <- match.call()
+
+  #
+  # check for valid inputs
+  #
+  asset.names <- names(er)
+  er <- as.vector(er)
+  N <- length(er)
+  cov.mat <- as.matrix(cov.mat)
+  if(N != nrow(cov.mat))
+    stop("invalid inputs")
+  if(any(diag(chol(cov.mat)) <= 0))
+    stop("Covariance matrix not positive definite")
+
+  #
+  # create portfolio names
+  #
+  port.names <- rep("port",nport)
+  ns <- seq(1,nport)
+  port.names <- paste(port.names,ns)
+
+  #
+  # compute global minimum variance portfolio
+  #
+  cov.mat.inv <- solve(cov.mat)
+  one.vec <- rep(1, N)
+  port.gmin <- globalMin.portfolio(er, cov.mat, shorts)
+  w.gmin <- port.gmin$weights
+
+  if(shorts==TRUE){
+    # compute efficient frontier as convex combinations of two efficient portfolios
+    # 1st efficient port: global min var portfolio
+    # 2nd efficient port: min var port with ER = max of ER for all assets
+    er.max <- max(er)
+    port.max <- efficient.portfolio(er,cov.mat,er.max)
+    w.max <- port.max$weights    
+    a <- seq(from=alpha.min,to=alpha.max,length=nport)			# convex combinations
+    we.mat <- a %o% w.gmin + (1-a) %o% w.max	# rows are efficient portfolios
+    er.e <- we.mat %*% er							# expected returns of efficient portfolios
+    er.e <- as.vector(er.e)
+  } else if(shorts==FALSE){
+    we.mat <- matrix(0, nrow=nport, ncol=N)
+    we.mat[1,] <- w.gmin
+    we.mat[nport, which.max(er)] <- 1
+    er.e <- as.vector(seq(from=port.gmin$er, to=max(er), length=nport))
+    for(i in 2:(nport-1)) 
+      we.mat[i,] <- efficient.portfolio(er, cov.mat, er.e[i], shorts)$weights
+  } else {
+    stop("shorts needs to be logical. For no-shorts, shorts=FALSE.")
+  }
+  
+  names(er.e) <- port.names
+  cov.e <- we.mat %*% cov.mat %*% t(we.mat) # cov mat of efficient portfolios
+  sd.e <- sqrt(diag(cov.e))					# std devs of efficient portfolios
+  sd.e <- as.vector(sd.e)
+  names(sd.e) <- port.names
+  dimnames(we.mat) <- list(port.names,asset.names)
+
+  # 
+  # summarize results
+  #
+  ans <- list("call" = call,
+	      "er" = er.e,
+	      "sd" = sd.e,
+	      "weights" = we.mat)
+  class(ans) <- "Markowitz"
+  ans
+}
+
+#
+# print method for portfolio object
+print.portfolio <- function(x, ...)
+{
+  cat("Call:\n")
+  print(x$call, ...)
+  cat("\nPortfolio expected return:    ", format(x$er, ...), "\n")
+  cat("Portfolio standard deviation: ", format(x$sd, ...), "\n")
+  cat("Portfolio weights:\n")
+  print(round(x$weights,4), ...)
+  invisible(x)
+}
+
+#
+# summary method for portfolio object
+summary.portfolio <- function(object, risk.free=NULL, ...)
+# risk.free			risk-free rate. If not null then
+#				compute and print Sharpe ratio
+# 
+{
+  cat("Call:\n")
+  print(object$call)
+  cat("\nPortfolio expected return:    ", format(object$er, ...), "\n")
+  cat(  "Portfolio standard deviation: ", format(object$sd, ...), "\n")
+  if(!is.null(risk.free)) {
+    SharpeRatio <- (object$er - risk.free)/object$sd
+    cat("Portfolio Sharpe Ratio:       ", format(SharpeRatio), "\n")
+  }
+  cat("Portfolio weights:\n")
+  print(round(object$weights,4), ...)
+  invisible(object)
+}
+# hard-coded 4 digits; prefer to let user control, via ... or other argument
+
+#
+# plot method for portfolio object
+plot.portfolio <- function(object, ...)
+{
+  asset.names <- names(object$weights)
+  barplot(object$weights, names=asset.names,
+	  xlab="Assets", ylab="Weight", main="Portfolio Weights", ...)
+  invisible()
+}
+
+#
+# print method for Markowitz object
+print.Markowitz <- function(x, ...)
+{
+  cat("Call:\n")
+  print(x$call)
+  xx <- rbind(x$er,x$sd)
+  dimnames(xx)[[1]] <- c("ER","SD")
+  cat("\nFrontier portfolios' expected returns and standard deviations\n")
+  print(round(xx,4), ...)
+  invisible(x)
+}
+# hard-coded 4, should let user control
+
+#
+# summary method for Markowitz object
+summary.Markowitz <- function(object, risk.free=NULL)
+{
+  call <- object$call
+  asset.names <- colnames(object$weights)
+  port.names <- rownames(object$weights)
+  if(!is.null(risk.free)) {
+    # compute efficient portfolios with a risk-free asset
+    nport <- length(object$er)
+    sd.max <- object$sd[1]
+    sd.e <- seq(from=0,to=sd.max,length=nport)	
+    names(sd.e) <- port.names
+
+    #
+    # get original er and cov.mat data from call 
+    er <- eval(object$call$er)
+    cov.mat <- eval(object$call$cov.mat)
+
+    #
+    # compute tangency portfolio
+    tan.port <- tangency.portfolio(er,cov.mat,risk.free)
+    x.t <- sd.e/tan.port$sd		# weights in tangency port
+    rf <- 1 - x.t			# weights in t-bills
+    er.e <- risk.free + x.t*(tan.port$er - risk.free)
+    names(er.e) <- port.names
+    we.mat <- x.t %o% tan.port$weights	# rows are efficient portfolios
+    dimnames(we.mat) <- list(port.names, asset.names)
+    we.mat <- cbind(rf,we.mat) 
+  }
+  else {
+    er.e <- object$er
+    sd.e <- object$sd
+    we.mat <- object$weights
+  }
+  ans <- list("call" = call,
+	      "er"=er.e,
+	      "sd"=sd.e,
+	      "weights"=we.mat)
+  class(ans) <- "summary.Markowitz"	
+  ans
+}
+
+print.summary.Markowitz <- function(x, ...)
+{
+	xx <- rbind(x$er,x$sd)
+	port.names <- names(x$er)
+	asset.names <- colnames(x$weights)
+	dimnames(xx)[[1]] <- c("ER","SD")
+	cat("Frontier portfolios' expected returns and standard deviations\n")
+	print(round(xx,4), ...)
+	cat("\nPortfolio weights:\n")
+	print(round(x$weights,4), ...)
+	invisible(x)
+}
+# hard-coded 4, should let user control
+
+#
+# plot efficient frontier
+#
+# things to add: plot original assets with names
+# tangency portfolio
+# global min portfolio
+# risk free asset and line connecting rf to tangency portfolio
+#
+plot.Markowitz <- function(object, plot.assets=FALSE, ...)
+# plot.assets		logical. If true then plot asset sd and er
+{
+  if (!plot.assets) {
+     y.lim=c(0,max(object$er))
+     x.lim=c(0,max(object$sd))
+     plot(object$sd,object$er,type="b",xlim=x.lim, ylim=y.lim,
+          xlab="Portfolio SD", ylab="Portfolio ER", 
+          main="Efficient Frontier", ...)
+     }
+  else {
+	  call = object$call
+	  mu.vals = eval(call$er)
+	  sd.vals = sqrt( diag( eval(call$cov.mat) ) )
+	  y.lim = range(c(0,mu.vals,object$er))
+	  x.lim = range(c(0,sd.vals,object$sd))
+	  plot(object$sd,object$er,type="b", xlim=x.lim, ylim=y.lim,
+          xlab="Portfolio SD", ylab="Portfolio ER", 
+          main="Efficient Frontier", ...)
+        text(sd.vals, mu.vals, labels=names(mu.vals))
+  }
+  invisible()
+}
+
+
+```
+```{r}
+# Data Needed for Optimization :to adjust return and correlation towards 15-years average
+#last 5 years of return
+a.m1=a.m[110:170,]
+muhat=colMeans(a.m1[,-5])
+a=(a.m1[,-5])
+
+# Adjusting Cov Matrix and Cov for last 5 years 
+covmat=cov(a.m)[-5,-5]
+cov.mat1 = cov(a.m1)[-5,-5]
+covhat.vals1 = cov.mat1[lower.tri(cov.mat1)]
+covhatvals=covmat[lower.tri(covmat)]
+
+# Adjusting Historic Returns to get to Expected Returns 
+r.free=0.0011
+er=muhat*(2/3)+muhat.vals[-5]*(1/3)
+er=er[-5]
+
+#Expected Cov Matrix
+ecov=cov.mat1*(2/3)+covmat*(1/3)
+names(covhat.vals1)=names(covhatvals)=names(ecov)<- c("sve","lve","lge","lvsv","lgsv","lvlg")
+
+
+# compute equally weighted portfolio
+ew = rep(1,4)/4
+equalWeight.portfolio = getPortfolio(er=er,cov.mat=ecov,weights=ew)
+class(equalWeight.portfolio)
+names(equalWeight.portfolio)
+equalWeight.portfolio
+summary(equalWeight.portfolio)
+plot(equalWeight.portfolio, col="blue")
+
+#
+# compute global minimum variance portfolio
+gmin.port = globalMin.portfolio(er, ecov)
+attributes(gmin.port)
+print(gmin.port)
+summary(gmin.port, risk.free=r.free)
+plot(gmin.port, col="blue")
+
+
+gmin.port.ns = globalMin.portfolio(er, ecov, shorts=FALSE)
+attributes(gmin.port.ns)
+print(gmin.port.ns)
+summary(gmin.port.ns, risk.free=r.free)
+plot(gmin.port.ns, col="blue")
+
+# compute efficient portfolio subject to target return
+target.return = er["svc.z"]
+e.port.msft = efficient.portfolio(er,ecov, target.return)
+e.port.msft
+summary(e.port.msft, risk.free=r.free)
+plot(e.port.msft, col="blue")
+
+#
+# compute efficient portfolio subject to target return with no short sales
+target.return = er["svc.z"]
+e.port.msft.ns = efficient.portfolio(er, ecov, target.return, shorts=FALSE)
+e.port.msft.ns
+summary(e.port.msft.ns, risk.free=r.free)
+plot(e.port.msft.ns, col="blue")
+
+
+# compute tangency portfolio
+tan.port <- tangency.portfolio(er, ecov, r.free)
+tan.port
+summary(tan.port, risk.free=r.free)
+plot(tan.port, col="blue")
+
+#
+# compute tangency portfolio with no short sales
+tan.port.ns <- tangency.portfolio(er, ecov, r.free, shorts=FALSE)
+tan.port.ns
+summary(tan.port.ns, risk.free=r.free)
+plot(tan.port.ns, col="blue")
+
+# compute portfolio frontier
+ef <- efficient.frontier(er, ecov, alpha.min=-2, 
+                         alpha.max=1.5, nport=20)
+attributes(ef)
+ef
+
+plot(ef)
+plot(ef, plot.assets=TRUE, col="blue", pch=16)
+points(gmin.port$sd, gmin.port$er, col="green", pch=16, cex=2)
+points(tan.port$sd, tan.port$er, col="red", pch=16, cex=2)
+text(gmin.port$sd, gmin.port$er, labels="GLOBAL MIN", pos=2)
+text(tan.port$sd, tan.port$er, labels="TANGENCY", pos=2)    
+sr.tan = (tan.port$er - r.free)/tan.port$sd
+abline(a=r.free, b=sr.tan, col="green", lwd=2)
+
+
+# plot portfolio frontier with tangency portfolio
+sd.vals = sqrt(diag(ecov))
+mu.vals = er
+plot(ef$sd, ef$er, ylim=c(0, max(ef$er)), xlim=c(0, max(ef$sd)),
+     xlab="portfolio sd", ylab="portfolio er", main="Efficient Portfolios")
+text(sd.vals, mu.vals, labels=names(mu.vals))
+abline(a=r.free, b=sr.tan)
+
+#
+# compute portfolio frontier with no short sales
+ef.ns <- efficient.frontier(er, ecov, alpha.min=0, 
+                            alpha.max=1, nport=20, shorts=FALSE)
+attributes(ef.ns)
+ef.ns
+summary(ef.ns)
+
+plot(ef.ns)
+plot(ef.ns, plot.assets=TRUE, col="blue", pch=16)
+points(gmin.port.ns$sd, gmin.port.ns$er, col="green", pch=16, cex=2)
+points(tan.port.ns$sd, tan.port.ns$er, col="red", pch=16, cex=2)
+text(gmin.port.ns$sd, gmin.port.ns$er, labels="GLOBAL MIN", pos=2)
+text(tan.port.ns$sd, tan.port.ns$er, labels="TANGENCY", pos=2)    
+sr.tan.ns = (tan.port.ns$er - r.free)/tan.port.ns$sd
+abline(a=r.free, b=sr.tan.ns, col="green", lwd=2)
+# plot portfolio frontier with tangency portfolio
+sd.vals = sqrt(diag(ecov))
+mu.vals = er
+plot(ef.ns$sd, ef.ns$er, ylim=c(0, max(ef.ns$er)), xlim=c(0, max(ef.ns$sd)),
+     xlab="portfolio sd", ylab="portfolio er", main="Efficient Portfolios")
+text(sd.vals, mu.vals, labels=names(mu.vals))
+abline(a=r.free, b=sr.tan.ns)
+
+# BOOTSTRAPPING
+options(digits=4, width=70)
+library(boot) # note: don't actually use the boot library for examples
+library(PerformanceAnalytics)
+
+n.obs=nrow(a)
+n.boot = 999
+mu.boot = matrix(0, n.boot, ncol(a))
+sd.boot = matrix(0, n.boot, ncol(a))
+colnames(mu.boot) = colnames(sd.boot) = colnames(a)
+
+set.seed(144)
+for (i in 1:n.boot) {
+    boot.idx = sample(n.obs, replace=TRUE)
+    ret.boot = a[boot.idx, ] 
+    mu.boot[i, ] = colMeans(ret.boot)
+    sd.boot[i, ] = apply(ret.boot, 2, sd) 
+}
+
+plot(sd.boot[, "lgc.z"], mu.boot[, "lgc.z"], col="black", pch=16,
+     ylim=c(-0.03, 0.07), xlim=c(0, 0.20),
+     ylab=expression(mu[p]),
+     xlab=expression(sigma[p]), cex.lab=1.5)
+points(sd.vals["lgc.z"], mu.vals["lgc.z"], pch=16, col="blue", cex=2.5)
+text(sd.vals["lgc.z"], mu.vals["lgc.z"], labels="lgc.z", pos=4, cex = 2)
+
+# plot boeing
+points(sd.boot[, "svc.z"], mu.boot[, "svc.z"], col="blue", pch=16)
+points(sd.vals["svc.z"], mu.vals["svc.z"], pch=16, col="blue", cex=2.5)
+text(sd.vals["svc.z"], mu.vals["svc.z"], labels="Small Value", pos=4, cex = 2)
+# plot nordstrom
+points(sd.boot[, "ec.z"], mu.boot[, "ec.z"], col="green", pch=16)
+points(sd.vals["ec.z"], mu.vals["ec.z"], pch=16, col="green", cex=2.5)
+text(sd.vals["ec.z"], mu.vals["ec.z"], labels="Europe", pos=4, cex = 2)
+# plot microsoft
+points(sd.boot[, "lvc.z"], mu.boot[, "lvc.z"], col="red", pch=16)
+points(sd.vals["lvc.z"], mu.vals["lvc.z"], pch=16, col="red", cex=2.5)
+text(sd.vals["lvc.z"], mu.vals["lvc.z"], labels="Large Value", pos=4, cex = 2)
+
+# show global minimum variance portfolio
+gmin.port = globalMin.portfolio(mu.vals, ecov)
+gmin.port
+
+# show risk return tradeoffs with global min
+plot(sd.vals, mu.vals,  ylim=c(0, 0.04), xlim=c(0, 0.20), ylab=expression(mu[p]),
+     xlab=expression(sigma[p]), pch=16, col="blue", cex=2.5, cex.lab=1.75)     
+text(sd.vals, mu.vals, labels=names(mu.vals), pos=4, cex = cex.val)
+points(gmin.port$sd, gmin.port$er, pch=16, cex=2.5, col="green")
+text(gmin.port$sd, gmin.port$er, labels="Global Min", pos=2, cex = cex.val)
+
+# bootstrap global min portfolio
+mu.gmin.boot = matrix(0, n.boot, 1)
+sd.gmin.boot = matrix(0, n.boot, 1)
+w.gmin.boot = matrix(0, n.boot, 4)
+colnames(mu.gmin.boot) = colnames(sd.gmin.boot) = "global.min"
+colnames(w.gmin.boot) = names(mu.vals)
+
+set.seed(144)
+for (i in 1:n.boot) {
+    boot.idx = sample(n.obs, replace=TRUE)
+    ret.boot = a[boot.idx, ] 
+    mu.boot = colMeans(ret.boot)
+    cov.boot = cov(ret.boot) 
+    gmin.boot = globalMin.portfolio(mu.boot, cov.boot)
+    mu.gmin.boot[i, ] = gmin.boot$er
+    sd.gmin.boot[i, ] = gmin.boot$sd
+    w.gmin.boot[i, ] = gmin.boot$weights
+}
+
+plot(sd.vals, mu.vals,  ylim=c(-0.01, 0.04), xlim=c(0, 0.20), ylab=expression(mu[p]),
+     xlab=expression(sigma[p]), pch=16, col="blue", cex=2.5, cex.lab=1.75)     
+abline(h=0, v=0)
+text(sd.vals, mu.vals, labels=names(mu.vals), pos=4, cex = cex.val)
+points(gmin.port$sd, gmin.port$er, pch=16, cex=2.5, col="black")
+text(gmin.port$sd, gmin.port$er, labels="Global Min", pos=2, cex = cex.val)
+# plot bootstrapped global min
+points(sd.gmin.boot, mu.gmin.boot, col="green", pch=16)
+
+# look at bootstrap distribution
+par(mfrow=c(2,2))
+hist(mu.gmin.boot, col="slateblue1")
+qqnorm(mu.gmin.boot, col="slateblue1", pch=16)
+qqline(mu.gmin.boot)
+
+hist(sd.gmin.boot, col="slateblue1")
+qqnorm(sd.gmin.boot, col="slateblue1", pch=16)
+qqline(sd.gmin.boot)
+par(mfrow=c(1,1))
+
+bias.mu.gmin = mean(mu.gmin.boot) - gmin.port$er
+se.mu.gmin = sd(mu.gmin.boot)
+ci.mu.gmin.95 = c(gmin.port$er-2*se.mu.gmin, 
+                  gmin.port$er+2*se.mu.gmin)
+bias.mu.gmin
+se.mu.gmin
+ci.mu.gmin.95
+
+bias.sd.gmin = mean(sd.gmin.boot) - gmin.port$sd
+se.sd.gmin = sd(sd.gmin.boot)
+ci.sd.gmin.95 = c(gmin.port$sd-2*se.sd.gmin, 
+                  gmin.port$sd+2*se.sd.gmin)
+bias.sd.gmin
+se.sd.gmin
+ci.sd.gmin.95
+
+
+# min var portfolio weights
+par(mfrow=c(2,2))
+hist(w.gmin.boot[, "lvc.z"], main="Large Value", xlab="Weight", col="slateblue1")
+hist(w.gmin.boot[, "svc.z"], main="Small Value", xlab="Weight", col="slateblue1")
+hist(w.gmin.boot[, "lgc.z"], main="Large Growth", xlab="Weight", col="slateblue1")
+hist(w.gmin.boot[, "ec.z"], main="Europe", xlab="Weight", col="slateblue1")
+par(mfrow=c(1,1))
+
+# compute bias, mse and 95% CI for weights
+bias.w.gmin = colMeans(w.gmin.boot) - gmin.port$weights
+se.w.gmin = apply(w.gmin.boot, 2, sd)
+ci.w.gmin.95 = rbind(gmin.port$weights-2*se.w.gmin, 
+                     gmin.port$weights+2*se.w.gmin)
+rownames(ci.w.gmin.95) = c("lower", "upper")
+bias.w.gmin
+se.w.gmin
+ci.w.gmin.95
+
+
+# sort bootstrap values by mean
+tmp.w.boot = w.gmin.boot[1:20, ]
+tmp.mu.boot = mu.gmin.boot[1:20, ]
+tmp.sd.boot = sd.gmin.boot[1:20, ]
+sort.idx = order(tmp.mu.boot)
+
+# look at weights in stacked bar charts
+chart.StackedBar(tmp.w.boot[sort.idx,], 
+                 xaxis.labels=round(tmp.mu.boot[sort.idx],digits=3), 
+                 xlab="Portfolio SD", ylab="Weights", cex.lab=1.5,
+                 cex.axis=1.5)
+
+# look at correlation between min var weights
+cor(w.gmin.boot)
+pairs(w.gmin.boot)
+
+qqnorm(w.gmin.boot[, "svc.z"], col="slateblue1", pch=16)
+qqline(w.gmin.boot[, "svc.z"])
+
+# bootstrap efficient frontier
+#
+
+# show efficient frontier from sample estimates
+ef = efficient.frontier(mu.vals,ecov)
+
+# plot efficient portfolios
+plot(ef$sd, ef$er, type="b", ylim=c(0, 0.04), xlim=c(0, 0.17), 
+     pch=16, col="blue", cex=2, ylab=expression(mu[p]), xlab=expression(sigma[p]))
+
+points(sd.vals, mu.vals, pch=16, cex=2, col="black")
+points(gmin.port$sd, gmin.port$er, pch=16, cex=2, col="green")
+text(sd.vals, mu.vals, labels=names(mu.vals), pos=4, cex=2)
+text(gmin.port$sd, gmin.port$er, labels="Global min", pos=4, cex=2)
+
+# bootstrap efficient frontier
+
+ef.list = list()
+set.seed(123)
+for (i in 1:n.boot) {
+    boot.idx = sample(n.obs, replace=TRUE)
+    ret.boot = a[boot.idx, ] 
+    mu.boot = colMeans(ret.boot)
+    cov.boot = cov(ret.boot) 
+    ef.boot = efficient.frontier(mu.boot, cov.boot)
+    ef.list[[i]] = ef.boot
+}
+
+# plot sample efficient frontier with first 20 bootstrap 
+# efficient frontiers
+# plot efficient portfolios
+plot(ef$sd, ef$er, type="b", ylim=c(-0.01, 0.03), xlim=c(0.03, 0.07), 
+     pch=16, col="blue", cex=0.5, ylab=expression(mu[p]), xlab=expression(sigma[p]))
+
+points(sd.vals, mu.vals, pch=16, cex=0.5, col="black")
+text(sd.vals, mu.vals, labels=names(mu.vals), pos=4, cex=0.5)
+# plot bootstrap efficient frontiers
+for (i in 1:30) {
+    points(ef.list[[i]]$sd, ef.list[[i]]$er, type="b",
+           pch=16, col=i, cex=0.5)
+}
+
+```
