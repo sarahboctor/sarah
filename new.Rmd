@@ -332,7 +332,7 @@ tratios=muhat.vals/se.muhat
 
 cbind(muhat.vals,se.muhat,tratios)
 ```
-###in some cases the se of the mean is even bigger than the mean itself! (in large growth)
+*in some cases the se of the mean is even bigger than the mean itself! (in large growth)*
  
 ### compute exact 95% confidence intervals
 
@@ -343,7 +343,7 @@ mu.upper = muhat.vals + t.975*se.muhat
 mu.width = mu.upper - mu.lower
 cbind(mu.lower,mu.upper,mu.width)
 ```
-### The Standard Error for the mean values are very big when compared to the mean values, indicating very low estimation precision
+*The Standard Error for the mean values are very big when compared to the mean values, indicating very low estimation precision*
 
 ### compute estimated standard error for Variance and Standard Deviation
 
@@ -378,15 +378,17 @@ rho.width = rho.upper - rho.lower
 cbind(rho.lower,rho.upper,rho.width)
 
 ```
-### SE for Variance, Standard Deviation and correlation are much lower, indicating higher precision
+*SE for Variance, Standard Deviation and correlation are much lower, indicating higher precision*
 
 ## show risk return tradeoffs
 ```{r}
-cex.val = 2
+cex.val = 1
 plot(sigmahat.vals, muhat.vals,  ylim=c(0, 0.04), xlim=c(0, 0.20), ylab=expression(mu[p]),
      xlab=expression(sigma[p]), pch=16, col="blue", cex=2.5, cex.lab=1.75)     
 text(sigmahat.vals, muhat.vals, labels=names(muhat.vals), pos=4, cex = cex.val)
+
 ```
+*A clear tradeoff between risk and return is unclear for the period. The Will 5000 index is inferior to all other choices* 
 
 ### Portfolio Construction and Optimization
 
@@ -894,7 +896,7 @@ plot.Markowitz <- function(object, plot.assets=FALSE, ...)
 
 ```
 
-```{r}
+```{r,echo=FALSE}
 
 # Data Needed for Optimization :to adjust return and correlation towards 15-years average
 
@@ -917,62 +919,79 @@ er=er[-5]
 #Expected Cov Matrix
 ecov=cov.mat1*(2/3)+covmat*(1/3)
 names(covhat.vals1)=names(covhatvals)=names(ecov)<- c("sve","lve","lge","lvsv","lgsv","lvlg")
+```
+
+###compute equally weighted portfolio of four asset classes
+
+```{r,echo=FALSE}
 
 
-# compute equally weighted portfolio
 ew = rep(1,4)/4
 equalWeight.portfolio = getPortfolio(er=er,cov.mat=ecov,weights=ew)
-class(equalWeight.portfolio)
-names(equalWeight.portfolio)
-equalWeight.portfolio
 summary(equalWeight.portfolio)
 plot(equalWeight.portfolio, col="blue")
+```
 
-#
-# compute global minimum variance portfolio
+###compute global minimum variance portfolio with shorts allowed
+
+```{r,echo=FALSE}
 gmin.port = globalMin.portfolio(er, ecov)
-attributes(gmin.port)
-print(gmin.port)
 summary(gmin.port, risk.free=r.free)
 plot(gmin.port, col="blue")
+```
 
+###compute global minimum variance portfolio with shorts not allowed
+
+```{r,echo=FALSE}
 
 gmin.port.ns = globalMin.portfolio(er, ecov, shorts=FALSE)
-attributes(gmin.port.ns)
-print(gmin.port.ns)
 summary(gmin.port.ns, risk.free=r.free)
 plot(gmin.port.ns, col="blue")
+```
 
-# compute efficient portfolio subject to target return
+###compute efficient portfolio subject to target return equal to mean return of the Small Value Asset Class 
+
+```{r,echo=FALSE}
+
 target.return = er["svc.z"]
 e.port.msft = efficient.portfolio(er,ecov, target.return)
-e.port.msft
 summary(e.port.msft, risk.free=r.free)
 plot(e.port.msft, col="blue")
+```
 
-#
-# compute efficient portfolio subject to target return with no short sales
+### compute efficient portfolio subject to target return with no short sales
+
+```{r,echo=FALSE}
 target.return = er["svc.z"]
 e.port.msft.ns = efficient.portfolio(er, ecov, target.return, shorts=FALSE)
-e.port.msft.ns
 summary(e.port.msft.ns, risk.free=r.free)
 plot(e.port.msft.ns, col="blue")
+```
 
+###compute tangency portfolio
 
-# compute tangency portfolio
+```{r,echo=FALSE}
+
 tan.port <- tangency.portfolio(er, ecov, r.free)
 tan.port
 summary(tan.port, risk.free=r.free)
 plot(tan.port, col="blue")
+```
 
-#
-# compute tangency portfolio with no short sales
+
+###compute tangency portfolio with no short sales
+
+```{r,echo=FALSE}
+
 tan.port.ns <- tangency.portfolio(er, ecov, r.free, shorts=FALSE)
-tan.port.ns
 summary(tan.port.ns, risk.free=r.free)
 plot(tan.port.ns, col="blue")
+```
 
-# compute portfolio frontier
+
+###compute efficient frontier
+
+```{r,echo=FALSE}
 ef <- efficient.frontier(er, ecov, alpha.min=-2, 
                          alpha.max=1.5, nport=20)
 attributes(ef)
@@ -986,22 +1005,26 @@ text(gmin.port$sd, gmin.port$er, labels="GLOBAL MIN", pos=2)
 text(tan.port$sd, tan.port$er, labels="TANGENCY", pos=2)    
 sr.tan = (tan.port$er - r.free)/tan.port$sd
 abline(a=r.free, b=sr.tan, col="green", lwd=2)
+```
 
 
-# plot portfolio frontier with tangency portfolio
+### plot portfolio frontier with tangency portfolio
+
+```{r,echo=FALSE}
 sd.vals = sqrt(diag(ecov))
 mu.vals = er
 plot(ef$sd, ef$er, ylim=c(0, max(ef$er)), xlim=c(0, max(ef$sd)),
      xlab="portfolio sd", ylab="portfolio er", main="Efficient Portfolios")
 text(sd.vals, mu.vals, labels=names(mu.vals))
 abline(a=r.free, b=sr.tan)
+```
 
-#
-# compute portfolio frontier with no short sales
+### compute portfolio frontier with no short sales
+
+```{r,echo=FALSE}
 ef.ns <- efficient.frontier(er, ecov, alpha.min=0, 
                             alpha.max=1, nport=20, shorts=FALSE)
-attributes(ef.ns)
-ef.ns
+
 summary(ef.ns)
 
 plot(ef.ns)
@@ -1012,15 +1035,26 @@ text(gmin.port.ns$sd, gmin.port.ns$er, labels="GLOBAL MIN", pos=2)
 text(tan.port.ns$sd, tan.port.ns$er, labels="TANGENCY", pos=2)    
 sr.tan.ns = (tan.port.ns$er - r.free)/tan.port.ns$sd
 abline(a=r.free, b=sr.tan.ns, col="green", lwd=2)
-# plot portfolio frontier with tangency portfolio
+```
+
+
+###plot portfolio frontier with tangency portfolio
+
+```{r,echo=FALSE}
 sd.vals = sqrt(diag(ecov))
 mu.vals = er
 plot(ef.ns$sd, ef.ns$er, ylim=c(0, max(ef.ns$er)), xlim=c(0, max(ef.ns$sd)),
      xlab="portfolio sd", ylab="portfolio er", main="Efficient Portfolios")
 text(sd.vals, mu.vals, labels=names(mu.vals))
 abline(a=r.free, b=sr.tan.ns)
+```
 
-# BOOTSTRAPPING
+###BOOTSTRAPPING
+
+*plot of bootstrapped asset values and volatilities*
+
+```{r,echo=FALSE}
+
 options(digits=4, width=70)
 library(boot) # note: don't actually use the boot library for examples
 library(PerformanceAnalytics)
@@ -1058,8 +1092,13 @@ text(sd.vals["ec.z"], mu.vals["ec.z"], labels="Europe", pos=4, cex = 2)
 points(sd.boot[, "lvc.z"], mu.boot[, "lvc.z"], col="red", pch=16)
 points(sd.vals["lvc.z"], mu.vals["lvc.z"], pch=16, col="red", cex=2.5)
 text(sd.vals["lvc.z"], mu.vals["lvc.z"], labels="Large Value", pos=4, cex = 2)
+```
 
-# show global minimum variance portfolio
+
+### original global minimum variance portfolio
+
+```{r,echo=FALSE}
+
 gmin.port = globalMin.portfolio(mu.vals, ecov)
 gmin.port
 
@@ -1069,8 +1108,12 @@ plot(sd.vals, mu.vals,  ylim=c(0, 0.04), xlim=c(0, 0.20), ylab=expression(mu[p])
 text(sd.vals, mu.vals, labels=names(mu.vals), pos=4, cex = cex.val)
 points(gmin.port$sd, gmin.port$er, pch=16, cex=2.5, col="green")
 text(gmin.port$sd, gmin.port$er, labels="Global Min", pos=2, cex = cex.val)
+```
 
-# bootstrap global min portfolio
+###bootstrapped global min portfolio
+
+```{r,echo=FALSE}
+
 mu.gmin.boot = matrix(0, n.boot, 1)
 sd.gmin.boot = matrix(0, n.boot, 1)
 w.gmin.boot = matrix(0, n.boot, 4)
@@ -1097,42 +1140,76 @@ points(gmin.port$sd, gmin.port$er, pch=16, cex=2.5, col="black")
 text(gmin.port$sd, gmin.port$er, labels="Global Min", pos=2, cex = cex.val)
 # plot bootstrapped global min
 points(sd.gmin.boot, mu.gmin.boot, col="green", pch=16)
+```
 
-# look at bootstrap distribution
+
+### Exploring the Bootstrap Distribution
+
+
+```{r,echo=FALSE}
+
+
 par(mfrow=c(2,2))
-hist(mu.gmin.boot, col="slateblue1")
+hist(mu.gmin.boot, main="distribution of global minimum portfolio", col="slateblue1")
 qqnorm(mu.gmin.boot, col="slateblue1", pch=16)
 qqline(mu.gmin.boot)
 
-hist(sd.gmin.boot, col="slateblue1")
+hist(sd.gmin.boot,main="distribution of portfolio standard deviation ", col="slateblue1")
 qqnorm(sd.gmin.boot, col="slateblue1", pch=16)
 qqline(sd.gmin.boot)
 par(mfrow=c(1,1))
+```
+
+*confidence interval for Global Minimum Portfolio*
+
+```{r,echo=FALSE}
 
 bias.mu.gmin = mean(mu.gmin.boot) - gmin.port$er
 se.mu.gmin = sd(mu.gmin.boot)
 ci.mu.gmin.95 = c(gmin.port$er-2*se.mu.gmin, 
                   gmin.port$er+2*se.mu.gmin)
+```
+
+```{r}
+
 bias.mu.gmin
 se.mu.gmin
 ci.mu.gmin.95
+```
+
+*confidence interval for Global Minimum Volatility*
+
+```{r,echo=FALSE}
 
 bias.sd.gmin = mean(sd.gmin.boot) - gmin.port$sd
 se.sd.gmin = sd(sd.gmin.boot)
 ci.sd.gmin.95 = c(gmin.port$sd-2*se.sd.gmin, 
                   gmin.port$sd+2*se.sd.gmin)
+```
+
+```{r}
+
 bias.sd.gmin
 se.sd.gmin
 ci.sd.gmin.95
+```
 
 
-# min var portfolio weights
+*Minimum variance portfolio asset weights*
+
+```{r}
 par(mfrow=c(2,2))
 hist(w.gmin.boot[, "lvc.z"], main="Large Value", xlab="Weight", col="slateblue1")
 hist(w.gmin.boot[, "svc.z"], main="Small Value", xlab="Weight", col="slateblue1")
 hist(w.gmin.boot[, "lgc.z"], main="Large Growth", xlab="Weight", col="slateblue1")
 hist(w.gmin.boot[, "ec.z"], main="Europe", xlab="Weight", col="slateblue1")
 par(mfrow=c(1,1))
+```
+
+
+*confidence interval for Global Minimum Asset Weights*
+
+```{r,echo=FALSE}
 
 # compute bias, mse and 95% CI for weights
 bias.w.gmin = colMeans(w.gmin.boot) - gmin.port$weights
@@ -1140,32 +1217,53 @@ se.w.gmin = apply(w.gmin.boot, 2, sd)
 ci.w.gmin.95 = rbind(gmin.port$weights-2*se.w.gmin, 
                      gmin.port$weights+2*se.w.gmin)
 rownames(ci.w.gmin.95) = c("lower", "upper")
+```
+
+```{r}
 bias.w.gmin
 se.w.gmin
 ci.w.gmin.95
+```
 
+```{r,echo=FALSE}
 
 # sort bootstrap values by mean
 tmp.w.boot = w.gmin.boot[1:20, ]
 tmp.mu.boot = mu.gmin.boot[1:20, ]
 tmp.sd.boot = sd.gmin.boot[1:20, ]
 sort.idx = order(tmp.mu.boot)
+```
 
-# look at weights in stacked bar charts
+
+*a look at a sample of portfolio weights in stacked bar charts*
+
+```{r,echo=FALSE}
 chart.StackedBar(tmp.w.boot[sort.idx,], 
                  xaxis.labels=round(tmp.mu.boot[sort.idx],digits=3), 
                  xlab="Portfolio SD", ylab="Weights", cex.lab=1.5,
                  cex.axis=1.5)
+```
 
-# look at correlation between min var weights
+
+* a look at correlation between min var weights*
+
+```{r}
+
+
 cor(w.gmin.boot)
 pairs(w.gmin.boot)
 
 qqnorm(w.gmin.boot[, "svc.z"], col="slateblue1", pch=16)
 qqline(w.gmin.boot[, "svc.z"])
+```
 
-# bootstrap efficient frontier
-#
+
+###Bootstrapping the Efficient Frontier
+
+*Original Efficient Frontier*
+
+```{r,echo=FALSE}
+
 
 # show efficient frontier from sample estimates
 ef = efficient.frontier(mu.vals,ecov)
@@ -1173,13 +1271,18 @@ ef = efficient.frontier(mu.vals,ecov)
 # plot efficient portfolios
 plot(ef$sd, ef$er, type="b", ylim=c(0, 0.04), xlim=c(0, 0.17), 
      pch=16, col="blue", cex=2, ylab=expression(mu[p]), xlab=expression(sigma[p]))
-
 points(sd.vals, mu.vals, pch=16, cex=2, col="black")
 points(gmin.port$sd, gmin.port$er, pch=16, cex=2, col="green")
 text(sd.vals, mu.vals, labels=names(mu.vals), pos=4, cex=2)
 text(gmin.port$sd, gmin.port$er, labels="Global min", pos=4, cex=2)
+```
 
-# bootstrap efficient frontier
+
+### The bootstrapped efficient frontiers
+
+*a plot of the first 20 bootstraps* 
+
+```{r,echo=FALSE}
 
 ef.list = list()
 set.seed(123)
