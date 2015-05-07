@@ -21,9 +21,14 @@ sv.df<-na.omit(SV.df)
 sg.df<-na.omit(SG.df)
 m.df<-na.omit(M.df)
 
+#Load Packages now
+library(PerformanceAnalytics)
+library(timeSeries)
+library(xts)
+
 #to compute returns directly from df 
 lg.r<-Return.calculate(lg.df, method="compound")
-
+head(lg.r)
 
 # to produce zoo objects
 rownames(lg.df) = lg.df$Date
@@ -39,9 +44,7 @@ sg.df = sg.df[, "Adj.Close", drop=FALSE]
 sv.df = sv.df[, "Adj.Close", drop=FALSE]
 lv.df = lv.df[, "Adj.Close", drop=FALSE]
 lg.df = lg.df[, "Adj.Close", drop=FALSE]
-#
-library(PerformanceAnalytics)
-library(timeSeries)
+
 
 dates.e = as.yearmon(rownames(e.df), format="%m/%d/%Y")
 dates.sg = as.yearmon(rownames(sg.df), format="%m/%d/%Y")

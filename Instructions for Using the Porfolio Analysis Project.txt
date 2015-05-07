@@ -1,0 +1,29 @@
+These are a series of scripts that I put together that I use for portfolio Analysis. 
+
+The zip folder includes: 
+
+1- the Scripts that must be run to perform the analysis
+2- the raw data that I used as my asset classes on which I performed the analysis
+3-an RMD file that I knit using excerpts from different sections of the projects that highlight the main analysis performed
+4-an HTML version of the RMD file for easy accessibility 
+
+
+Packages You need to install to run all the scripts: 
+-------------------------------------
+PerformanceAnalytics,timeSeries,xts,boot
+
+How to use the Scripts to view the project:
+-------------------------------------------
+
+1- Open the file Inputs.R in R-Studio. Modify the path in load path to where you unzipped the projects files, 
+specifically the excel files
+2- Run the Inputs.R file. This will load the excel files on R-Studio
+3- Open Descriptive Statistics.R and run the script. This will perform some exploratory statistics on the data. 
+4- Open and Run portfolio_noshorts.r. This contains portfolio optimization functions created by Professor Eric Zivot 
+from University of Washington.
+5- open and run Optimization.R. This performs optimization of 4 asset classes subject to different constraints.
+It creates the Efficient Frontier, Tangent Portfolio, and bootstraps the efficient frontier, demonstrating different 
+asset class weights 
+
+
+

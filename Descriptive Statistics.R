@@ -113,34 +113,7 @@ skewness(e.m)
 kurtosis(e.m)
 
 
-# Comparing US Equity and a Gaussian Distribution 
-#  create  idd gaussian Distn with same mean and sd as data
-set.seed(123)
-gwn = rnorm(length(m.m),mean=mean(m.m),sd=sd(m.m))
-par(mfrow=c(2,1))
-ts.plot(m.m,main="Market Portfolio", lwd=2, col="blue")
-abline(h=0)
-ts.plot(gwn,main="Gaussian data with same mean and sd as Market Portfolio", lwd=2, col="blue")
-abline(h=0)
-par(mfrow=c(1,1))
-
-gwn = rnorm(length(m.m))
-
-# compare empirical cdf to standard normal cdf for simulated gaussian data
-z1 = scale(gwn)      	# standardize to have mean zero and sd 1
-n1 = length(gwn)
-F.hat = 1:n1/n1			# empirical cdf
-x1 = sort(z1)				# sort from smallest to largest
-y1 = pnorm(x1)			# compute standard normal cdf at x
-
-plot(x1,y1,main="Empirical CDF vs. Normal CDF for Gaussian data",
-     type="l",lwd=2,xlab="standardized gwn",ylab="CDF")
-points(x1,F.hat, type="s", lty=1, lwd=3, col="orange")
-
-legend(x="topleft",legend=c("Normal CDF","Empirical CDF"),
-       lty=c(1,1), lwd=2, col=c("black","orange"))
-
-# Quantiles 
+# Quantiles Compared to Normal Quantiles 
 
 quantile(m.m,probs=c(0.01,0.05),na.rm=T)
 
@@ -151,29 +124,47 @@ qnorm(p=c(0.01,0.05), mean=mean(m.m), sd=sd(m.m))
 par(mfrow=c(2,2))  # 4 panel layout: 2 rows and 2 columns
 qqnorm(gwn, main="Gaussian data")
 qqline(gwn)
+qqnorm(sv.m, main="Small Value")
+qqline(sv.m)
+qqnorm(lg.m, main="Large Growth")
+qqline(lg.m)
+qqnorm(lv.m, main="Large Value")
+qqline(lv.m)
+par(mfrow=c(1,2))
 qqnorm(m.m, main="US")
 qqline(m.m)
 qqnorm(e.m, main="Europe")
 qqline(e.m)
-qqnorm(sv.m, main="Large Growth")
-qqline(sv.m)
-qqnorm(lg.m, main="Large Growth")
-qqline(lg.m)
-qqnorm(lv.m, main="Large Growth")
-qqline(lv.m)
+
+# Comparing US Equity and a Gaussian Distribution 
+#  create  idd gaussian Distn with same mean and sd as data
+set.seed(123)
+gwn = rnorm(length(m.m),mean=mean(m.m),sd=sd(m.m))
+par(mfrow=c(2,1))
+ts.plot(m.m,main="US Equity", lwd=2, col="blue")
+abline(h=0)
+ts.plot(gwn,main="Gaussian data with same mean and sd as Market Portfolio", lwd=2, col="blue")
+abline(h=0)
 par(mfrow=c(1,1))
+
+
+
 
 # Boxplot 
 boxplot.matrix(a.m,names=c("Euro","SV","LV","LG","US"),outchar=T, col="slateblue1",
                main="Comparison of return distributions",ylab="monthly return")
-boxplot(sg.m)
+boxplot(sg.m,main="Small Growth",col="slateblue1")
 
 # bivariate scatterplot
-plot(m.m,e.m,main="Monthly cc returns on Dev and Em", col="slateblue1")
+plot(m.m,e.m,main="Monthly Compound returns on Developed and Emerging", col="slateblue1")
 abline(h=mean(e.m))  # horizontal line at SP500 mean
 abline(v=mean(m.m))    # vertical line at MSFT mean
 
-pairs(a.m[-1,-1], col="slateblue1") # most relationships are between both types of value stocks, and between large stocks.The MSCI has poor correlation with all. 
+pairs(a.m[-1,-1], col="slateblue1") 
+
+# most relationships are between both types of value stocks, 
+# and  large stocks.The MSCI has poor correlation with all. 
+
 #
 var(a.m)
 cor(a.m)
@@ -186,35 +177,6 @@ set.seed(114)
 sim.e = rnorm(nobs, mean=0, sd=sd.e)
 sim.ret = mu + sim.e
 boxplot(cbind(m.m,sim.ret,gwn), names=c("World","CER","GWN"))
-
-# Random Walk Model UNDERSTAND AND FIX
-
-mu = mean(m.m)
-sd.e = sd(m.m)
-nobs = 170
-set.seed(111)
-sim.e = rnorm(nobs, mean=0, sd=sd.e)
-sim.p = 1 + mu*seq(nobs) + cumsum(sim.e)
-sim.P = exp(sim.p)
-par(mfrow=c(2,1),mar=rep(2,4))
-ts.plot(sim.p, col="blue",lwd=2,
-        ylim=c(-2, 4), ylab="log price")
-lines( (1+mu*seq(nobs)), lty="dotted", col="black", lwd=2)
-lines(cumsum(sim.e), col="orange", lty="dashed", lwd=2)
-abline(h=0)
-legend(x="topleft",legend=c("p(t)","E[p(t)]","p(t)-E[p(t)]"),
-       lty=c("solid","dotted","dashed"), col=c("blue","black","orange"), 
-       lwd=2, cex=c(0.75,0.75,0.75))
-ts.plot(sim.P, lwd=2, col="blue", ylab="price")
-
-#compare with the market
-par(mfrow=c(1,1))
-boxplot(cbind(sim.p,m.m), lwd=2, col=c("green","yellow"), ylim=c(-3,2.5),names=c("random walk","market"),ylab="price")
-par(mfrow=c(1,1))
-boxplot(m.m)
-par(mfrow=c(1,1))
-
-options(digits=4)
 
 
 # Computing means, variances and covariances 
@@ -236,7 +198,9 @@ names(covhat.vals) <- names(rhohat.vals) <- c("sve","lve","lge","me","lvsv","lgs
 nobs = nrow(a.m)
 nobs
 se.muhat = sigmahat.vals/sqrt(nobs)
-se.muhat # in some cases the se of the mean is even bigger than the mean itself! (in LG)
+se.muhat 
+
+# in some cases the se of the mean is even bigger than the mean itself! (in LG)
 # compute t-ratios
 muhat.vals/se.muhat
 # compute exact 95% confidence intervals
@@ -273,7 +237,10 @@ cbind(rho.lower,rho.upper,rho.width)
 # show risk return tradeoffs
 
 cex.val = 2
-plot(sigmahat.vals, muhat.vals,  ylim=c(0, 0.04), xlim=c(0, 0.20), ylab=expression(mu[p]),
-     xlab=expression(sigma[p]), pch=16, col="blue", cex=2.5, cex.lab=1.75)     
-text(sigmahat.vals, muhat.vals, labels=names(muhat.vals), pos=4, cex = cex.val)
+plot(sigmahat.vals, muhat.vals,  ylim=c(0, 0.02), xlim=c(0, 0.15), ylab=expression(mu[p]),
+     xlab=expression(sigma[p]), pch=16, col="blue", cex=1, cex.lab=1.75)     
+text(sigmahat.vals, muhat.vals, labels=c('europe','SV','LV','LG','US'), pos=4, cex =1)
 
+# Compound Returns over that 10-year period don't exhibit the tradeoff expected between
+# risk and return. Large Growth and European Equity seem to be inferior to Large Value,
+# Small Value and US Equity as a whole

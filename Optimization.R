@@ -1,14 +1,20 @@
-# Data Needed for Optimization :to adjust return and correlation towards 15-years average
+
+
+# Data Needed for Optimization :
+
 #last 5 years of return
-a.m1=a.m[110:170,]
-muhat=colMeans(a.m1[,-5])
-a=a.m1[,-5]
-# Adjusting Cov Matrix and Cov for last 5 years 
+a.m5=a.m[110:170,]
+muhat=colMeans(a.m5[,-5])
+a=a.m5[,-5]
+sd.vals = colSds(a)
+mu.vals=colMeans(a)
+# Creating Cov Matrix and Cov for last 5 years 
 covmat=cov(a.m)[-5,-5]
-cov.mat1 = cov(a.m1)[-5,-5]
-covhat.vals1 = cov.mat1[lower.tri(cov.mat1)]
+cov.mat5 = cov(a.m5)[-5,-5]
+covhat.vals5 = cov.mat5[lower.tri(cov.mat5)]
 covhatvals=covmat[lower.tri(covmat)]
 
+#To get Expected Return, I use the return from last 5-years, Adjusted towards the return and correlation of the 10-years average
 # Adjusting Historic Returns to get to Expected Returns 
 r.free=0.0011
 er=muhat*(2/3)+muhat.vals[-5]*(1/3)
@@ -16,7 +22,8 @@ er=er[-5]
 
 #Expected Cov Matrix
 ecov=cov.mat1*(2/3)+covmat*(1/3)
-names(covhat.vals1)=names(covhatvals)=names(ecov)<- c("sve","lve","lge","lvsv","lgsv","lvlg")
+ecovmat=ecov[lower.tri(ecov)]
+names(covhat.vals5)=names(covhatvals)=names(ecovmat)<- c("sve","lve","lge","lvsv","lgsv","lvlg")
 
 #run the script in potfolio_noshorts now 
 
@@ -35,7 +42,7 @@ gmin.port = globalMin.portfolio(er, ecov)
 attributes(gmin.port)
 print(gmin.port)
 summary(gmin.port, risk.free=r.free)
-plot(gmin.port, col="blue")
+plot(gmin.port, col="blue",main="Global Minimum Weights")
 
 #
 # compute global minimum variance portfolio with no short sales
@@ -46,23 +53,22 @@ summary(gmin.port.ns, risk.free=r.free)
 plot(gmin.port.ns, col="blue")
 
 
-#WHY IS RETURN LOWER WITH SHORT SALES ALLOWED
 
 
-# compute efficient portfolio subject to target return
+# compute efficient portfolio subject to target return equal that of the Small Value Market
 target.return = er["svc.z"]
-e.port.msft = efficient.portfolio(er,ecov, target.return)
-e.port.msft
-summary(e.port.msft, risk.free=r.free)
-plot(e.port.msft, col="blue")
+e.port.sv= efficient.portfolio(er,ecov, target.return)
+e.port.sv
+summary(e.port.sv, risk.free=r.free)
+plot(e.port.sv, col="blue")
 
 #
 # compute efficient portfolio subject to target return with no short sales
 target.return = er["svc.z"]
-e.port.msft.ns = efficient.portfolio(er, ecov, target.return, shorts=FALSE)
-e.port.msft.ns
-summary(e.port.msft.ns, risk.free=r.free)
-plot(e.port.msft.ns, col="blue")
+e.port.sv.ns = efficient.portfolio(er, ecov, target.return, shorts=FALSE)
+e.port.sv.ns
+summary(e.port.sv.ns, risk.free=r.free)
+plot(e.port.sv.ns, col="blue")
 
 #
 # compute tangency portfolio
@@ -85,7 +91,6 @@ ef <- efficient.frontier(er, ecov, alpha.min=-2,
 attributes(ef)
 ef
 
-plot(ef)
 plot(ef, plot.assets=TRUE, col="blue", pch=16)
 points(gmin.port$sd, gmin.port$er, col="green", pch=16, cex=2)
 points(tan.port$sd, tan.port$er, col="red", pch=16, cex=2)
@@ -95,13 +100,7 @@ sr.tan = (tan.port$er - r.free)/tan.port$sd
 abline(a=r.free, b=sr.tan, col="green", lwd=2)
 
 
-# plot portfolio frontier with tangency portfolio
-sd.vals = sqrt(diag(ecov))
-mu.vals = er
-plot(ef$sd, ef$er, ylim=c(0, max(ef$er)), xlim=c(0, max(ef$sd)),
-     xlab="portfolio sd", ylab="portfolio er", main="Efficient Portfolios")
-text(sd.vals, mu.vals, labels=names(mu.vals))
-abline(a=r.free, b=sr.tan)
+
 
 #
 # compute portfolio frontier with no short sales
@@ -111,7 +110,6 @@ attributes(ef.ns)
 ef.ns
 summary(ef.ns)
 
-plot(ef.ns)
 plot(ef.ns, plot.assets=TRUE, col="blue", pch=16)
 points(gmin.port.ns$sd, gmin.port.ns$er, col="green", pch=16, cex=2)
 points(tan.port.ns$sd, tan.port.ns$er, col="red", pch=16, cex=2)
@@ -121,18 +119,12 @@ sr.tan.ns = (tan.port.ns$er - r.free)/tan.port.ns$sd
 abline(a=r.free, b=sr.tan.ns, col="green", lwd=2)
 
 
-# plot portfolio frontier with tangency portfolio
-sd.vals = sqrt(diag(ecov))
-mu.vals = er
-plot(ef.ns$sd, ef.ns$er, ylim=c(0, max(ef.ns$er)), xlim=c(0, max(ef.ns$sd)),
-     xlab="portfolio sd", ylab="portfolio er", main="Efficient Portfolios")
-text(sd.vals, mu.vals, labels=names(mu.vals))
-abline(a=r.free, b=sr.tan.ns)
+
 
 #   BOOTSTRAPPING   
 # re-sample means and sd values
 options(digits=4, width=70)
-library(boot) # note: don't actually use the boot library for examples
+library(boot) 
 library(PerformanceAnalytics)
 
 n.obs=nrow(a)
@@ -148,25 +140,25 @@ for (i in 1:n.boot) {
     mu.boot[i, ] = colMeans(ret.boot)
     sd.boot[i, ] = apply(ret.boot, 2, sd) 
 }
-
-plot(sd.boot[, "lgc.z"], mu.boot[, "lgc.z"], col="black", pch=16,
+# Large Growth Bootstrapped Returns 
+plot(sd.boot[, "lgc.z"], mu.boot[, "lgc.z"], col="black", pch=1, cex=0.5,
      ylim=c(-0.03, 0.07), xlim=c(0, 0.20),
      ylab=expression(mu[p]),
-     xlab=expression(sigma[p]), cex.lab=1.5)
-points(sd.vals["lgc.z"], mu.vals["lgc.z"], pch=16, col="blue", cex=2.5)
-text(sd.vals["lgc.z"], mu.vals["lgc.z"], labels="lgc.z", pos=4, cex = 2)
-# plot boeing
-points(sd.boot[, "svc.z"], mu.boot[, "svc.z"], col="blue", pch=16)
-points(sd.vals["svc.z"], mu.vals["svc.z"], pch=16, col="blue", cex=2.5)
-text(sd.vals["svc.z"], mu.vals["svc.z"], labels="Small Value", pos=4, cex = 2)
-# plot nordstrom
-points(sd.boot[, "ec.z"], mu.boot[, "ec.z"], col="green", pch=16)
-points(sd.vals["ec.z"], mu.vals["ec.z"], pch=16, col="green", cex=2.5)
-text(sd.vals["ec.z"], mu.vals["ec.z"], labels="Europe", pos=4, cex = 2)
-# plot microsoft
-points(sd.boot[, "lvc.z"], mu.boot[, "lvc.z"], col="red", pch=16)
-points(sd.vals["lvc.z"], mu.vals["lvc.z"], pch=16, col="red", cex=2.5)
-text(sd.vals["lvc.z"], mu.vals["lvc.z"], labels="Large Value", pos=4, cex = 2)
+     xlab=expression(sigma[p]), cex.lab=2)
+points(sd.vals["lgc.z"], mu.vals["lgc.z"], pch=16, col="blue", cex=1)
+text(sd.vals["lgc.z"], mu.vals["lgc.z"], labels="Large Growth", pos=4, col="blue", cex = 1)
+# Small Value Bootstrapped Returns 
+points(sd.boot[, "svc.z"], mu.boot[, "svc.z"], col="yellow", pch=2, cex=0.5)
+points(sd.vals["svc.z"], mu.vals["svc.z"], pch=16, col="blue", cex=1)
+text(sd.vals["svc.z"], mu.vals["svc.z"], labels="Small Value", col="blue", pos=4, cex = 1)
+# Europe Bootstrapped Returns 
+points(sd.boot[, "ec.z"], mu.boot[, "ec.z"], col="green", pch=3, cex=0.5)
+points(sd.vals["ec.z"], mu.vals["ec.z"], pch=16, col="blue", cex=1)
+text(sd.vals["ec.z"], mu.vals["ec.z"], labels="Europe", col="blue", pos=4, cex = 1)
+# Large Value Bootstrapped Returns
+points(sd.boot[, "lvc.z"], mu.boot[, "lvc.z"], col="red", cex=0.5, pch=5)
+points(sd.vals["lvc.z"], mu.vals["lvc.z"], pch=16, col="blue", cex=1)
+text(sd.vals["lvc.z"], mu.vals["lvc.z"], labels="Large Value",  col="blue",pos=4, cex = 1)
 
 # show global minimum variance portfolio
 gmin.port = globalMin.portfolio(mu.vals, ecov)
@@ -174,10 +166,10 @@ gmin.port
 
 # show risk return tradeoffs with global min
 plot(sd.vals, mu.vals,  ylim=c(0, 0.04), xlim=c(0, 0.20), ylab=expression(mu[p]),
-     xlab=expression(sigma[p]), pch=16, col="blue", cex=2.5, cex.lab=1.75)     
-text(sd.vals, mu.vals, labels=names(mu.vals), pos=4, cex = cex.val)
-points(gmin.port$sd, gmin.port$er, pch=16, cex=2.5, col="green")
-text(gmin.port$sd, gmin.port$er, labels="Global Min", pos=2, cex = cex.val)
+     xlab=expression(sigma[p]), pch=16, col="blue", cex=1, cex.lab=1.75)     
+text(sd.vals, mu.vals, labels=names(mu.vals), pos=4, cex = 1)
+points(gmin.port$sd, gmin.port$er, pch=16, cex=1, col="green")
+text(gmin.port$sd, gmin.port$er, labels="Global Min", pos=2, cex = 0.75)
 
 # bootstrap global min portfolio
 mu.gmin.boot = matrix(0, n.boot, 1)
@@ -199,22 +191,23 @@ for (i in 1:n.boot) {
 }
 
 plot(sd.vals, mu.vals,  ylim=c(-0.01, 0.04), xlim=c(0, 0.20), ylab=expression(mu[p]),
-     xlab=expression(sigma[p]), pch=16, col="blue", cex=2.5, cex.lab=1.75)     
+     xlab=expression(sigma[p]), pch=16, col="blue", cex=1, cex.lab=1.75)     
 abline(h=0, v=0)
-text(sd.vals, mu.vals, labels=names(mu.vals), pos=4, cex = cex.val)
-points(gmin.port$sd, gmin.port$er, pch=16, cex=2.5, col="black")
-text(gmin.port$sd, gmin.port$er, labels="Global Min", pos=2, cex = cex.val)
+text(sd.vals, mu.vals, labels=names(mu.vals), pos=4, cex =1)
+points(gmin.port$sd, gmin.port$er, pch=16, cex=1, col="black")
+text(gmin.port$sd, gmin.port$er, labels="Global Min", pos=2, cex = 0.75)
+
 # plot bootstrapped global min
-points(sd.gmin.boot, mu.gmin.boot, col="green", pch=16)
+points(sd.gmin.boot, mu.gmin.boot, col="green", pch=16, cex = 0.2)
 
 # look at bootstrap distribution
 par(mfrow=c(2,2))
 hist(mu.gmin.boot, col="slateblue1")
-qqnorm(mu.gmin.boot, col="slateblue1", pch=16)
+qqnorm(mu.gmin.boot, col="slateblue1", pch=16, cex = 0.75)
 qqline(mu.gmin.boot)
 
 hist(sd.gmin.boot, col="slateblue1")
-qqnorm(sd.gmin.boot, col="slateblue1", pch=16)
+qqnorm(sd.gmin.boot, col="slateblue1", pch=16, cex = 0.75)
 qqline(sd.gmin.boot)
 par(mfrow=c(1,1))
 
@@ -262,14 +255,14 @@ sort.idx = order(tmp.mu.boot)
 # look at weights in stacked bar charts
 chart.StackedBar(tmp.w.boot[sort.idx,], 
                  xaxis.labels=round(tmp.mu.boot[sort.idx],digits=3), 
-                 xlab="Portfolio SD", ylab="Weights", cex.lab=1.5,
-                 cex.axis=1.5)
+                 xlab="Portfolio SD", ylab="Weights", cex.lab=1,
+                 cex.axis=0.75)
 
 # look at correlation between min var weights
 cor(w.gmin.boot)
 pairs(w.gmin.boot)
 
-qqnorm(w.gmin.boot[, "svc.z"], col="slateblue1", pch=16)
+qqnorm(w.gmin.boot[, "svc.z"], col="slateblue1", pch=16, cex = 0.75)
 qqline(w.gmin.boot[, "svc.z"])
 
 
@@ -282,12 +275,12 @@ ef = efficient.frontier(mu.vals,ecov)
 
 # plot efficient portfolios
 plot(ef$sd, ef$er, type="b", ylim=c(0, 0.04), xlim=c(0, 0.17), 
-     pch=16, col="blue", cex=2, ylab=expression(mu[p]), xlab=expression(sigma[p]))
+     pch=16, col="blue", cex = 0.75, ylab=expression(mu[p]), xlab=expression(sigma[p]))
 
-points(sd.vals, mu.vals, pch=16, cex=2, col="black")
-points(gmin.port$sd, gmin.port$er, pch=16, cex=2, col="green")
-text(sd.vals, mu.vals, labels=names(mu.vals), pos=4, cex=2)
-text(gmin.port$sd, gmin.port$er, labels="Global min", pos=4, cex=2)
+points(sd.vals, mu.vals, pch=16, cex = 1, col="black")
+points(gmin.port$sd, gmin.port$er, pch=16, cex = 1, col="green")
+text(sd.vals, mu.vals, labels=names(mu.vals), pos=4, cex = 0.75)
+text(gmin.port$sd, gmin.port$er, labels="Global min", pos=4, cex = 0.75)
 
 # bootstrap efficient frontier
 
@@ -305,7 +298,7 @@ for (i in 1:n.boot) {
 # plot sample efficient frontier with first 20 bootstrap 
 # efficient frontiers
 # plot efficient portfolios
-plot(ef$sd, ef$er, type="b", ylim=c(-0.01, 0.03), xlim=c(0.03, 0.07), 
+plot(ef$sd, ef$er, type="b", ylim=c(-0.01, 0.03), xlim=c(0.02, 0.07), 
      pch=16, col="blue", cex=0.5, ylab=expression(mu[p]), xlab=expression(sigma[p]))
 
 points(sd.vals, mu.vals, pch=16, cex=0.5, col="black")

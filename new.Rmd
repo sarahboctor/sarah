@@ -1298,13 +1298,13 @@ for (i in 1:n.boot) {
 # plot sample efficient frontier with first 20 bootstrap 
 # efficient frontiers
 # plot efficient portfolios
-plot(ef$sd, ef$er, type="b", ylim=c(-0.01, 0.03), xlim=c(0.03, 0.07), 
+plot(ef$sd, ef$er, type="b", ylim=c(-0.01, 0.04), xlim=c(0.00, 0.15), 
      pch=16, col="blue", cex=0.5, ylab=expression(mu[p]), xlab=expression(sigma[p]))
 
 points(sd.vals, mu.vals, pch=16, cex=0.5, col="black")
 text(sd.vals, mu.vals, labels=names(mu.vals), pos=4, cex=0.5)
 # plot bootstrap efficient frontiers
-for (i in 1:30) {
+for (i in 1:40) {
     points(ef.list[[i]]$sd, ef.list[[i]]$er, type="b",
            pch=16, col=i, cex=0.5)
 }
